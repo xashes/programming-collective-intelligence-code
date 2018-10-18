@@ -7,4 +7,5 @@ def test_sim_distance():
                  2) == 0.29
 
 def test_sim_pearson():
-    assert round(sim_pearson(critics, 'Lisa Rose', 'Gene Seymour'), 2) == 0.40
+    assert round(sim_pearson(critics_df, 'Lisa Rose', 'Gene Seymour'), 2) == 0.40
+
