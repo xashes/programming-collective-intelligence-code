@@ -1,6 +1,7 @@
 import scipy as sp
 from scipy.spatial import distance
 import pandas as pd
+from math import sqrt
 
 # A dictionary of movie critics and their ratings of a small
 # set of movies
