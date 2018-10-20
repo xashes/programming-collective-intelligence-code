@@ -57,7 +57,7 @@ critics = {
     }
 }
 
-critics_df = pd.DataFrame(critics)
+critics = pd.DataFrame(critics)
 
 
 # Returns a distance-based similarity score for person1 and person2
@@ -80,44 +80,27 @@ def sim_pearson(prefs, p1, p2):
 # Returns the best matches for person from the prefs dictionary.
 # Number of results and similarity function are optional params.
 def topMatches(prefs, person, n=5, similarity=sim_pearson):
-    scores = [(similarity(prefs, person, other), other) for other in prefs
-              if other != person]
-    scores.sort()
-    scores.reverse()
-    return scores[0:n]
+    scores = [(similarity(prefs, person, other), other)
+              for other in prefs.columns if other != person]
+    return sorted(scores, reverse=True)[:n]
 
 
 # Gets recommendations for a person by using a weighted average
 # of every other user's rankings
 def getRecommendations(prefs, person, similarity=sim_pearson):
-    totals = {}
-    simSums = {}
-    for other in prefs:
-        # don't compare me to myself
-        if other == person: continue
-        sim = similarity(prefs, person, other)
+    # TODO can choose similar method
+    similar = prefs.corr()[person]
+    df = prefs.T
+    df = df.apply(lambda col: col * similar)
+    df['similar'] = similar
+    df = df.drop(person)
 
-        # ignore scores of zero or lower
-        if sim <= 0: continue
-        for item in prefs[other]:
+    ranking = []
+    for movie in df.columns:
+        total_score, sim_sum = df.loc[:, [movie, 'similar']].dropna().sum()
+        ranking.append((total_score / sim_sum, movie))
 
-            # only score movies I haven't seen yet
-            if item not in prefs[person] or prefs[person][item] == 0:
-                # Similarity * Score
-                totals.setdefault(item, 0)
-                totals[item] += prefs[other][item] * sim
-                # Sum of similarities
-                simSums.setdefault(item, 0)
-                simSums[item] += sim
-
-    # Create the normalized list
-    rankings = [(total / simSums[item], item)
-                for item, total in totals.items()]
-
-    # Return the sorted list
-    rankings.sort()
-    rankings.reverse()
-    return rankings
+    return sorted(ranking, reverse=True)
 
 
 def transformPrefs(prefs):
